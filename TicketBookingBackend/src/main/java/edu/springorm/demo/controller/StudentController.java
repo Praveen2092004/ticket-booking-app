@@ -12,8 +12,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
-// Configured to accept requests from both port 3000 and 3001
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"}) 
+// ✅ Added explicit CORS permission for ports 3000, 3001, and 3002
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}) 
 public class StudentController {
 
     private final StudentRepository repo;
@@ -23,7 +23,7 @@ public class StudentController {
         this.repo = repo;
     }
 
-    // ✅ REGISTER (Updated to return clean JSON and HTTP status codes)
+    // REGISTER Student Accounts with JSON validations
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Student student) {
         Student existing = repo.findByUsername(student.getUsername());
@@ -40,7 +40,7 @@ public class StudentController {
                 .body(Map.of("message", "Registered Successfully"));
     }
 
-    // ✅ LOGIN (Updated to return structured HTTP Responses)
+    // LOGIN Authentication Pipeline Checking
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Student student) {
         Student existing = repo.findByUsername(student.getUsername());
@@ -54,7 +54,7 @@ public class StudentController {
                 .body(Map.of("message", "Invalid Student Credentials"));
     }
 
-    // ✅ GET ALL 
+    // GET ALL Active Student Profiles array
     @GetMapping("/all")
     public ResponseEntity<List<Student>> getAllStudents() {
         return ResponseEntity.ok(repo.findAll());

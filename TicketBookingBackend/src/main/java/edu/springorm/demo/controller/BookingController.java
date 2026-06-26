@@ -11,38 +11,37 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "http://localhost:3000") // Allows your React app to connect
+// ✅ Added explicit CORS permission for ports 3000, 3001, and 3002
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"})
 public class BookingController {
 
     private final BookingRepository repository;
 
-    // Constructor Injection
     @Autowired
     public BookingController(BookingRepository repository) {
         this.repository = repository;
     }
 
-    // 1. GET Endpoint - To fetch data (Safe to test directly in your browser tab)
+    // 1. GET Endpoint - Fetch all booking data records
     @GetMapping("/all")
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = repository.findAll();
         return ResponseEntity.ok(bookings);
     }
 
-    // 2. POST Endpoint - To receive data from your React form submission
+    // 2. POST Endpoint - Receive and process form submission details from React
     @PostMapping("/add")
     public ResponseEntity<Booking> bookTicket(@RequestBody Booking booking) {
 
-        // Null safety check
         if (booking == null || booking.getTickets() == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        // Business logic calculation
+        // Set calculation based on tickets count
         double totalAmount = booking.getTickets() * 150.0;
         booking.setTotalAmount(totalAmount);
 
-        // Save to your Aiven MySQL cloud instance
+        // Commit tracking record directly into your Aiven MySQL cloud database instance
         Booking savedBooking = repository.save(booking);
 
         return ResponseEntity.ok(savedBooking);
