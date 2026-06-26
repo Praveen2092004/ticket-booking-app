@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ticket-booking-backend-6u5z.onrender.com/api/:path*"
+    }
+  ]
+}
