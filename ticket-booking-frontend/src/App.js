@@ -4,6 +4,9 @@ import { jsPDF } from "jspdf";
 import QRCode from "react-qr-code"; 
 
 function App() {
+  // --- Live Production API Base URL ---
+  const API_BASE_URL = "https://ticket-booking-backend-6u5z.onrender.com";
+
   // --- Core Application State ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -33,8 +36,8 @@ function App() {
     { id: 2, title: "Cyber Workshop", venue: "Lab 04", students: 0, date: "2026-06-12", price: 150, registeredList: [] },
     { id: 3, title: "AI Summit", venue: "Grand Hall", students: 0, date: "2026-07-19", price: 500, registeredList: [] },
     { id: 4, title: "UI/UX Meetup", venue: "Design Lab", students: 0, date: "2026-08-05", price: 100, registeredList: [] },
-    { id: 5, title: "Robotics Expo", venue: "Tech Arena", students: 0, date: "2026-09-10", price: 250, registeredList: [] },
-    { id: 6, title: "Cloud Connect", venue: "Seminar Room", students: 0, date: "2026-10-15", price: 350, registeredList: [] }
+    { id: 5, title: "Robotics Expo", venue: "Tech Arena", students: 0, date: "2025-09-10", price: 250, registeredList: [] },
+    { id: 6, title: "Cloud Connect", venue: "Seminar Room", students: 0, date: "2025-10-15", price: 350, registeredList: [] }
   ]);
 
   const [newEvent, setNewEvent] = useState({ title: '', venue: '', price: '', date: '' });
@@ -57,7 +60,7 @@ function App() {
   };
 
   // ---------------------------------------------------------
-  // 2. PDF GENERATION LOGIC (UPDATED WITH QR ON RIGHT)
+  // 2. PDF GENERATION LOGIC
   // ---------------------------------------------------------
   const downloadTicketPDF = (event) => {
     const doc = new jsPDF();
@@ -127,7 +130,7 @@ function App() {
     }
     if (roleSelected === 'student') {
       try {
-        const response = await fetch("http://localhost:8080/api/students/login", {
+        const response = await fetch(`${API_BASE_URL}/api/students/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
@@ -151,7 +154,7 @@ function App() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8080/api/students/register", {
+      const response = await fetch(`${API_BASE_URL}/api/students/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -198,32 +201,59 @@ function App() {
   };
 
   // ---------------------------------------------------------
-  // 5. BOOKING LOGIC (STUDENT)
+  // 5. LIVE CLOUD BOOKING LOGIC (STUDENT)
   // ---------------------------------------------------------
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!studentName || !studentEmail || !studentId) {
       alert("Enter all student details!");
       return;
     }
-    const updatedEvents = events.map(ev =>
-      ev.id === selectedEvent.id
-        ? { 
-            ...ev, 
-            students: ev.students + ticketCount,
-            registeredList: [...ev.registeredList, { name: studentName, email: studentEmail, sid: studentId }]
-          }
-        : ev
-    );
-    setEvents(updatedEvents);
-    downloadTicketPDF(selectedEvent);
-    alert("Booking Confirmed!");
-    
-    // Reset Form Data
-    setSelectedEvent(null);
-    setTicketCount(1);
-    setStudentName('');
-    setStudentEmail('');
-    setStudentId('');
+
+    // Payload fully updated to align perfectly with Booking.java Entity mapping
+    const bookingPayload = {
+      name: studentName,
+      email: studentEmail,
+      department: studentId, 
+      tickets: Number(ticketCount),
+      totalAmount: Number(selectedEvent.price * ticketCount)
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(bookingPayload)
+      });
+
+      if (response.ok) {
+        const updatedEvents = events.map(ev =>
+          ev.id === selectedEvent.id
+            ? { 
+                ...ev, 
+                students: ev.students + ticketCount,
+                registeredList: [...ev.registeredList, { name: studentName, email: studentEmail, sid: studentId }]
+              }
+            : ev
+        );
+        setEvents(updatedEvents);
+        
+        downloadTicketPDF(selectedEvent);
+        alert("Booking Saved Successfully in Cloud Database!");
+        
+        setSelectedEvent(null);
+        setTicketCount(1);
+        setStudentName('');
+        setStudentEmail('');
+        setStudentId('');
+      } else {
+        alert("Server rejected booking confirmation.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not commit transaction to the cloud database engine.");
+    }
   };
 
   // ---------------------------------------------------------
