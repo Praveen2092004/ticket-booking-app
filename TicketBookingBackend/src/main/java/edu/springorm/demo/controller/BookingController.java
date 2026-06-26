@@ -11,8 +11,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
-// ✅ Added explicit CORS permission for ports 3000, 3001, and 3002
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"})
+// ✅ Added explicit CORS permission for all local development ports and your live production Vercel app link
+@CrossOrigin(origins = {
+    "http://localhost:3000", 
+    "http://localhost:3001", 
+    "http://localhost:3002", 
+    "https://ticket-booking-app-tawny.vercel.app"
+})
 public class BookingController {
 
     private final BookingRepository repository;

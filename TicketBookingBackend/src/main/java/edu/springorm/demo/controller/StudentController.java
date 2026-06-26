@@ -12,8 +12,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
-// ✅ Added explicit CORS permission for ports 3000, 3001, and 3002
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"}) 
+// ✅ Added explicit CORS permission for localhost ports and your live Vercel production link
+@CrossOrigin(origins = {
+    "http://localhost:3000", 
+    "http://localhost:3001", 
+    "http://localhost:3002", 
+    "https://ticket-booking-app-tawny.vercel.app"
+}) 
 public class StudentController {
 
     private final StudentRepository repo;
